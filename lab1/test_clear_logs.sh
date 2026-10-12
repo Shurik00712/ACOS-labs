@@ -1,9 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-TEST_DIR="$HOME/lab1"
-LOG_DIR="$TEST_DIR/log"
-BACKUP_DIR="$TEST_DIR/backup"
+
+LOG_DIR="${1:-$HOME/log}"
+BACKUP_DIR="${2:-/backup}"
 
 setup() {
     mkdir -p "$LOG_DIR" "$BACKUP_DIR"
@@ -94,7 +94,7 @@ test_lzma() {
 }
 test_nonexistent() {
     setup
-    local fake="$TEST_DIR/doesnt_exist"
+    local fake="${TEST_DIR%/*}/doesnt_exist"
     if ./clear_logs.sh "$fake" 70 "$BACKUP_DIR" > /dev/null 2>&1; then
         fail "test_nonexistent"
     fi
