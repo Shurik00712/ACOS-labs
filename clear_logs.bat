@@ -11,4 +11,4 @@ if not exist "%SCRIPT%" (
 powershell -NoProfile -NoLogo -File "%SCRIPT%" %*
 set "RC=%ERRORLEVEL%"
 
-endlocal & exit /b %RC%
+exit /b %RC%
