@@ -1,79 +1,78 @@
 #!/bin/bash
 set -euo pipefail
 
-LOG_DIR="${1:-/log}"
-THRESHOLD="${2:-70}"
-BACKUP_DIR="${3:-/backup}"
+log_dir="${1:-/log}"
+threshold="${2:-70}"
+backup_dir="${3:-/backup}"
 
-case "$THRESHOLD" in
+case "$threshold" in
     ''|*[!0-9]*)
         echo "THRESHOLD should be a number" >&2
         exit 1
         ;;
 esac
 
-if (( THRESHOLD < 0 || THRESHOLD > 100 )); then
+if (( threshold < 0 || threshold > 100 )); then
     echo "Error: THRESHOLD should be in range 0..100" >&2
     exit 1
 fi
 
-if [ ! -d "$LOG_DIR" ]; then
-    echo "Error: $LOG_DIR not found" >&2
+if [ ! -d "$log_dir" ]; then
+    echo "Error: $log_dir not found" >&2
     exit 1
 fi
 
-case "$BACKUP_DIR/" in
-    "$LOG_DIR/"*)
-        echo "Error: BACKUP_DIR ($BACKUP_DIR) located in LOG_DIR ($LOG_DIR)" >&2
+case "$backup_dir/" in
+    "$log_dir/"*)
+        echo "Error: $backup_dir located in $log_dir" >&2
         exit 1
         ;;
 esac
 
-MAX_SIZE=$(df -B1 --output=size "$LOG_DIR" | tail -n 1 | grep -o '[0-9]*')
+max_size=$(df -B1 --output=size "$log_dir" | tail -n 1 | grep -o '[0-9]*')
 
-if [ "$MAX_SIZE" -le 0 ]; then 
-    echo "Error: could not determine the disk size for $LOG_DIR (size less zero)" >&2
+if [ "$max_size" -le 0 ]; then
+    echo "Error: could not determine the disk size for $log_dir" >&2
     exit 1
 fi
 
-case "$MAX_SIZE" in
+case "$max_size" in
     ''|*[!0-9]*)
-        echo "Error: could not determine the disk size for $LOG_DIR" >&2
+        echo "Error: could not determine the disk size for $log_dir" >&2
         exit 1
         ;;
 esac
 
-echo "disk size $LOG_DIR: $MAX_SIZE bytes"
+echo "disk size $log_dir: $max_size bytes"
 
-mkdir -p "$BACKUP_DIR"
+mkdir -p "$backup_dir"
 
-current_size=$(du -sb "$LOG_DIR" | cut -f1)
+current_size=$(du -sb "$log_dir" | cut -f1)
 
 case "$current_size" in
     ''|*[!0-9]*)
-        echo "Error: could not determine the size $LOG_DIR" >&2
+        echo "Error: could not determine the size $log_dir" >&2
         exit 1
         ;;
 esac
 
-percent=$(( current_size * 100 / MAX_SIZE ))
-echo "Size of $LOG_DIR: $current_size bytes ($percent%)"
+percent=$(( current_size * 100 / max_size ))
+echo "Size of $log_dir: $current_size bytes ($percent%)"
 
-if [ "$percent" -le "$THRESHOLD" ]; then
-    echo "The fill level does not exceed $THRESHOLD%."
+if [ "$percent" -le "$threshold" ]; then
+    echo "The fill level does not exceed $threshold%."
     exit 0
 fi
 
-target=$(( MAX_SIZE * THRESHOLD / 100 ))
+target=$(( max_size * threshold / 100 ))
 need=$(( current_size - target ))
 echo "Need to free: $need bytes"
 
 files=()
-echo find "$LOG_DIR"
 while IFS= read -r -d '' line; do
     echo $line
     files+=("$line")
-done < <(find "$LOG_DIR" -type f -printf '%T@ %p\0' | sort -z -n | cut -z -d ' ' -f2-)
+done < <(find "$log_dir" -type f -printf '%T@ %p\0' | sort -z -n | cut -z -d ' ' -f2-)
 
 files_arch=()
 i=0
@@ -102,13 +101,13 @@ if [ "$need" -gt 0 ]; then
     echo "Warning: Failed to collect files for $need bytes; everything that was found will be archived and deleted." >&2
 fi
 
-timestamp=$(date +%Y%m%d_%H%M%S)
+ts=$(date +%Y%m%d_%H%M%S)
 if [ "${LAB1_MAX_COMPRESSION:-0}" = "1" ]; then
-    arch="$BACKUP_DIR/archive_$timestamp.tar.lzma"
-    tar --lzma -cf "$arch" -C "$LOG_DIR" -- "${files_arch[@]#"$LOG_DIR"/}"
+    arch="$backup_dir/archive_$ts.tar.lzma"
+    tar --lzma -cf "$arch" -C "$log_dir" -- "${files_arch[@]#"$log_dir"/}"
 else
-    arch="$BACKUP_DIR/archive_$timestamp.tar.gz"
-    tar -czf "$arch" -C "$LOG_DIR" -- "${files_arch[@]#"$LOG_DIR"/}"
+    arch="$backup_dir/archive_$ts.tar.gz"
+    tar -czf "$arch" -C "$log_dir" -- "${files_arch[@]#"$log_dir"/}"
 fi
 
 if [ ! -s "$arch" ]; then
