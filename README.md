@@ -18,7 +18,7 @@ set LAB1_MAX_COMPRESSION=1 && clear_logs.bat <LOG_DIR> <THRESHOLD> <BACKUP_DIR>
 
 ## Запуск тестов
 
-**Linux:** `./test_clear_logs.sh` (использует `$HOME/lab1/log` и `$HOME/lab1/backup`).
+**Linux:** `./test_clear_logs.sh [LOG_DIR] [BACKUP_DIR] [SCRIPT]` - аргументы опциональны, по умолчанию `$HOME/lab1/log`, `$HOME/lab1/backup`, `./clear_logs.sh`.
 
 **Windows:** `test_clear_logs.bat [LOG_DIR] [BACKUP_DIR] [SCRIPT]` - аргументы опциональны, по умолчанию `L:\log`, `C:\lab1\backup`, `clear_logs.ps1` рядом с батником. Можно задать значения и через переменные окружения `LOG_DIR`, `BACKUP_DIR`, `SCRIPT`.
 

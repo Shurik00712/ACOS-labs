@@ -1,10 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-test_dir="$HOME/lab1"
-log_dir="$test_dir/log"
-backup_dir="$test_dir/backup"
-script="./clear_logs.sh"
+log_dir="${1:-$HOME/lab1/log}"
+backup_dir="${2:-$HOME/lab1/backup}"
+script="${3:-./clear_logs.sh}"
+test_dir="$(dirname "$log_dir")"
 
 fail() { echo "Error: $1" >&2; exit 1; }
 pass() { echo "PASS: $1"; }
